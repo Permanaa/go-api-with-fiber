@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"go-api-with-fiber/database"
+	"go-api-with-fiber/model"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -12,7 +13,7 @@ import (
 var validate = validator.New()
 
 func GetAll(c *fiber.Ctx) error {
-	var users []User
+	var users []model.User
 
 	result := database.DB.Find(&users)
 
@@ -29,6 +30,7 @@ func GetAll(c *fiber.Ctx) error {
 		usersResponse = append(usersResponse, UserResponse{
 			ID:        user.ID,
 			Name:      user.Name,
+			Email:     user.Email,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 		})
@@ -41,7 +43,7 @@ func GetAll(c *fiber.Ctx) error {
 }
 
 func GetById(c *fiber.Ctx) error {
-	var user User
+	var user model.User
 
 	err := database.DB.First(&user, c.Params("id")).Error
 
@@ -62,51 +64,9 @@ func GetById(c *fiber.Ctx) error {
 	userResponse := UserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
+		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "success",
-		"data":    userResponse,
-	})
-}
-
-func Create(c *fiber.Ctx) error {
-	userBody := new(UserRequest)
-
-	if err := c.BodyParser(userBody); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "bad request",
-			"data":    nil,
-		})
-	}
-
-	if err := validate.Struct(userBody); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": err.Error(),
-			"data":    nil,
-		})
-	}
-
-	newUser := User{
-		Name: userBody.Name,
-	}
-
-	err := database.DB.Create(&newUser).Error
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "failed to create user",
-			"data":    nil,
-		})
-	}
-
-	userResponse := UserResponse{
-		ID:        newUser.ID,
-		Name:      newUser.Name,
-		CreatedAt: newUser.CreatedAt,
-		UpdatedAt: newUser.UpdatedAt,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -132,7 +92,7 @@ func Update(c *fiber.Ctx) error {
 		})
 	}
 
-	var user User
+	var user model.User
 
 	errGetById := database.DB.First(&user, c.Params("id")).Error
 
@@ -150,8 +110,9 @@ func Update(c *fiber.Ctx) error {
 		})
 	}
 
-	errUpdate := database.DB.Model(&user).Updates(User{
-		Name: userRequest.Name,
+	errUpdate := database.DB.Model(&user).Updates(model.User{
+		Name:  userRequest.Name,
+		Email: userRequest.Email,
 	}).Error
 
 	if errUpdate != nil {
@@ -164,6 +125,7 @@ func Update(c *fiber.Ctx) error {
 	userResponse := UserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
+		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -175,7 +137,7 @@ func Update(c *fiber.Ctx) error {
 }
 
 func Delete(c *fiber.Ctx) error {
-	var user User
+	var user model.User
 
 	err := database.DB.First(&user, c.Params("id")).Error
 
@@ -202,8 +164,16 @@ func Delete(c *fiber.Ctx) error {
 		})
 	}
 
+	userResponse := UserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "success",
-		"data":    user,
+		"data":    userResponse,
 	})
 }

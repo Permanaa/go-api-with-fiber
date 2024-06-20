@@ -1,4 +1,4 @@
-package user
+package model
 
 import (
 	"time"
@@ -12,4 +12,6 @@ type User struct {
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"deletedAt" gorm:"index"`
 	Name      string         `json:"name"`
+	Email     string         `json:"email" gorm:"unique"`
+	Password  string         `json:"password"`
 }
