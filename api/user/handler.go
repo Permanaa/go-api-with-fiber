@@ -2,7 +2,7 @@ package user
 
 import (
 	"errors"
-	"go-api-with-fiber/config"
+	"go-api-with-fiber/database"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -14,7 +14,7 @@ var validate = validator.New()
 func GetAll(c *fiber.Ctx) error {
 	var users []User
 
-	result := config.DB.Find(&users)
+	result := database.DB.Find(&users)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -43,7 +43,7 @@ func GetAll(c *fiber.Ctx) error {
 func GetById(c *fiber.Ctx) error {
 	var user User
 
-	err := config.DB.First(&user, c.Params("id")).Error
+	err := database.DB.First(&user, c.Params("id")).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -93,7 +93,7 @@ func Create(c *fiber.Ctx) error {
 		Name: userBody.Name,
 	}
 
-	err := config.DB.Create(&newUser).Error
+	err := database.DB.Create(&newUser).Error
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -134,7 +134,7 @@ func Update(c *fiber.Ctx) error {
 
 	var user User
 
-	errGetById := config.DB.First(&user, c.Params("id")).Error
+	errGetById := database.DB.First(&user, c.Params("id")).Error
 
 	if errors.Is(errGetById, gorm.ErrRecordNotFound) {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -150,7 +150,7 @@ func Update(c *fiber.Ctx) error {
 		})
 	}
 
-	errUpdate := config.DB.Model(&user).Updates(User{
+	errUpdate := database.DB.Model(&user).Updates(User{
 		Name: userRequest.Name,
 	}).Error
 
@@ -177,7 +177,7 @@ func Update(c *fiber.Ctx) error {
 func Delete(c *fiber.Ctx) error {
 	var user User
 
-	err := config.DB.First(&user, c.Params("id")).Error
+	err := database.DB.First(&user, c.Params("id")).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -193,7 +193,7 @@ func Delete(c *fiber.Ctx) error {
 		})
 	}
 
-	errDelete := config.DB.Delete(&user).Error
+	errDelete := database.DB.Delete(&user).Error
 
 	if errDelete != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

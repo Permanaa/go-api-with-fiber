@@ -2,8 +2,8 @@ package main
 
 import (
 	"go-api-with-fiber/api"
-	"go-api-with-fiber/config"
-	"go-api-with-fiber/migration"
+	"go-api-with-fiber/database"
+	"go-api-with-fiber/database/migration"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,7 +11,7 @@ import (
 func main() {
 	app := fiber.New()
 
-	config.DBConnect()
+	database.DBConnect()
 
 	migration.Migrate()
 
