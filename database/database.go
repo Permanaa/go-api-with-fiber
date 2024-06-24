@@ -1,7 +1,7 @@
 package database
 
 import (
-	"log"
+	"fmt"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -19,5 +19,5 @@ func DBConnect() {
 
 	DB = db
 
-	log.Println("connected to database")
+	fmt.Println("connected to database")
 }

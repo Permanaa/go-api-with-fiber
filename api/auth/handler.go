@@ -2,10 +2,14 @@ package auth
 
 import (
 	"go-api-with-fiber/database"
-	"go-api-with-fiber/model"
+	"go-api-with-fiber/database/model"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,7 +25,7 @@ func Register(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(registerRequest); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "bad request",
+			"message": err.Error(),
 			"data":    nil,
 		})
 	}
@@ -59,7 +63,7 @@ func Register(c *fiber.Ctx) error {
 
 	if errCreate != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "failed to register",
+			"message": errCreate.Error(),
 			"data":    nil,
 		})
 	}
@@ -75,5 +79,65 @@ func Register(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "success",
 		"data":    registerResponse,
+	})
+}
+
+func LogIn(c *fiber.Ctx) error {
+	logInRequest := new(LogInRequest)
+
+	if err := c.BodyParser(logInRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	if err := validate.Struct(logInRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	var user model.User
+
+	errFindByEmail := database.DB.Where("email = ?", logInRequest.Email).Find(&user).Error
+
+	if errFindByEmail != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "wrong user email or password",
+			"data":    nil,
+		})
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(logInRequest.Password)); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "wrong user email or password",
+			"data":    nil,
+		})
+	}
+
+	generateAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Issuer:    "scratching",
+		Subject:   strconv.Itoa(int(user.ID)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+	})
+
+	accessToken, errGenerateAccessToken := generateAccessToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+
+	if errGenerateAccessToken != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to log in",
+			"data":    nil,
+		})
+	}
+
+	logInResponse := LogInResponse{
+		AccessToken: accessToken,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    logInResponse,
 	})
 }

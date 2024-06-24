@@ -3,7 +3,7 @@ package user
 import (
 	"errors"
 	"go-api-with-fiber/database"
-	"go-api-with-fiber/model"
+	"go-api-with-fiber/database/model"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"

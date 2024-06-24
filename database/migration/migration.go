@@ -1,9 +1,9 @@
 package migration
 
 import (
+	"fmt"
 	"go-api-with-fiber/database"
-	"go-api-with-fiber/model"
-	"log"
+	"go-api-with-fiber/database/model"
 )
 
 func Migrate() {
@@ -13,5 +13,5 @@ func Migrate() {
 		panic("failed to run migration")
 	}
 
-	log.Println("database migrated")
+	fmt.Println("database migrated")
 }
