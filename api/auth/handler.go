@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"encoding/base64"
 	"go-api-with-fiber/database"
 	"go-api-with-fiber/database/model"
 	"go-api-with-fiber/utils"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -239,5 +241,63 @@ func RefreshToken(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "success",
 		"data":    refreshTokenResponse,
+	})
+}
+
+func AnonymousToken(c *fiber.Ctx) error {
+	basicToken := c.Get("Authorization")
+
+	if basicToken == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "unauthorized",
+			"data":    nil,
+		})
+	}
+
+	splitBearer := strings.Split(basicToken, " ")
+	tokenString := splitBearer[1]
+
+	basicByte, errDecode := base64.StdEncoding.DecodeString(tokenString)
+
+	if errDecode != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errDecode.Error(),
+			"data":    nil,
+		})
+	}
+
+	splitUserPass := strings.Split(string(basicByte), ":")
+
+	username := splitUserPass[0]
+	password := splitUserPass[1]
+
+	if username != os.Getenv("BASIC_AUTH_USERNAME") || password != os.Getenv("BASIC_AUTH_PASSWORD") {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "unauthorized",
+			"data":    nil,
+		})
+	}
+
+	generateAnonToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Issuer:    "scratching",
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 30)),
+	})
+
+	anonToken, errGenerateAnonToken := generateAnonToken.SignedString([]byte(os.Getenv("JWT_ANONYMOUS_TOKEN_SECRET_KEY")))
+
+	if errGenerateAnonToken != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGenerateAnonToken.Error(),
+			"data":    nil,
+		})
+	}
+
+	AnonymousResponse := AnonymousResponse{
+		AnonymousToken: anonToken,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    AnonymousResponse,
 	})
 }

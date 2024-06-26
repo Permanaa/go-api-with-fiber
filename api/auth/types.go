@@ -30,3 +30,7 @@ type TokenResponse struct {
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refreshToken" validate:"required"`
 }
+
+type AnonymousResponse struct {
+	AnonymousToken string `json:"anonymousToken"`
+}

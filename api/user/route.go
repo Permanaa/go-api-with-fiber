@@ -7,8 +7,8 @@ import (
 )
 
 func Route(app *fiber.App) {
-	app.Get("/user", middleware.Protected, GetAll)
-	app.Get("/user/:id", middleware.Protected, GetById)
-	app.Put("/user/:id", middleware.Protected, Update)
-	app.Delete("/user/:id", middleware.Protected, Delete)
+	app.Get("/user", middleware.BearerProtected, GetAll)
+	app.Get("/user/:id", middleware.BearerProtected, GetById)
+	app.Put("/user/:id", middleware.BearerProtected, Update)
+	app.Delete("/user/:id", middleware.BearerProtected, Delete)
 }

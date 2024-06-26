@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func Protected(c *fiber.Ctx) error {
+func BearerProtected(c *fiber.Ctx) error {
 	bearerToken := c.Get("Authorization")
 
 	if bearerToken == "" {
