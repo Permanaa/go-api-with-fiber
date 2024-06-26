@@ -3,6 +3,7 @@ package auth
 import (
 	"go-api-with-fiber/database"
 	"go-api-with-fiber/database/model"
+	"go-api-with-fiber/utils"
 	"os"
 	"strconv"
 	"time"
@@ -117,27 +118,126 @@ func LogIn(c *fiber.Ctx) error {
 		})
 	}
 
-	generateAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    "scratching",
-		Subject:   strconv.Itoa(int(user.ID)),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
-	})
-
-	accessToken, errGenerateAccessToken := generateAccessToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	accessToken, errGenerateAccessToken := utils.GenerateAccessToken(strconv.Itoa(int(user.ID)))
 
 	if errGenerateAccessToken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "failed to log in",
+			"message": errGenerateAccessToken.Error(),
 			"data":    nil,
 		})
 	}
 
-	logInResponse := LogInResponse{
-		AccessToken: accessToken,
+	refreshToken, errGenerateRefreshtoken := utils.GenerateRefreshToken(strconv.Itoa(int(user.ID)))
+
+	if errGenerateRefreshtoken != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGenerateRefreshtoken.Error(),
+			"data":    nil,
+		})
+	}
+
+	logInResponse := TokenResponse{
+		AccessToken:  accessToken,
+		Refreshtoken: refreshToken,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "success",
 		"data":    logInResponse,
+	})
+}
+
+func RefreshToken(c *fiber.Ctx) error {
+	refreshTokenRequest := new(RefreshTokenRequest)
+
+	if err := c.BodyParser(refreshTokenRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	if err := validate.Struct(refreshTokenRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	parseToken, errParseToken := jwt.Parse(refreshTokenRequest.RefreshToken, func(t *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_REFRESH_TOKEN_SECRET_KEY")), nil
+	})
+
+	if errParseToken != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errParseToken.Error(),
+			"data":    nil,
+		})
+	}
+
+	tokenClaims := parseToken.Claims.(jwt.MapClaims)
+
+	expirationTime, errGetExp := tokenClaims.GetExpirationTime()
+
+	if errGetExp != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGetExp.Error(),
+			"data":    nil,
+		})
+	}
+
+	if expirationTime.Unix() < time.Now().Unix() {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "unauthorized",
+			"data":    nil,
+		})
+	}
+
+	userId, errGetSubject := tokenClaims.GetSubject()
+
+	if errGetSubject != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGetSubject.Error(),
+			"data":    nil,
+		})
+	}
+
+	var user model.User
+
+	errGetUser := database.DB.First(&user, userId).Error
+
+	if errGetUser != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "unauthorized",
+			"data":    nil,
+		})
+	}
+
+	accessToken, errGenerateAccessToken := utils.GenerateAccessToken(strconv.Itoa(int(user.ID)))
+
+	if errGenerateAccessToken != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGenerateAccessToken.Error(),
+			"data":    nil,
+		})
+	}
+
+	refreshToken, errGenerateRefreshtoken := utils.GenerateRefreshToken(strconv.Itoa(int(user.ID)))
+
+	if errGenerateRefreshtoken != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGenerateRefreshtoken.Error(),
+			"data":    nil,
+		})
+	}
+
+	refreshTokenResponse := TokenResponse{
+		AccessToken:  accessToken,
+		Refreshtoken: refreshToken,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    refreshTokenResponse,
 	})
 }

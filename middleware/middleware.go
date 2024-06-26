@@ -25,7 +25,7 @@ func Protected(c *fiber.Ctx) error {
 	tokenString := splitBearer[1]
 
 	parseToken, errParseToken := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+		return []byte(os.Getenv("JWT_ACCESS_TOKEN_SECRET_KEY")), nil
 	})
 
 	if errParseToken != nil {
