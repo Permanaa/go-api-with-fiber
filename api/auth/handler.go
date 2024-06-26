@@ -120,7 +120,7 @@ func LogIn(c *fiber.Ctx) error {
 	generateAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "scratching",
 		Subject:   strconv.Itoa(int(user.ID)),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
 	})
 
 	accessToken, errGenerateAccessToken := generateAccessToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
