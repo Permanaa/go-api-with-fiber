@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/joho/godotenv"
 )
 
@@ -22,7 +23,7 @@ func main() {
 
 	migration.Migrate()
 
-	// app.Use(limiter.New())
+	app.Use(limiter.New())
 
 	api.Routes(app)
 
