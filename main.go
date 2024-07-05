@@ -20,6 +20,7 @@ func main() {
 	app := fiber.New()
 
 	database.DBConnect()
+	database.RedisConnect()
 
 	migration.Migrate()
 
