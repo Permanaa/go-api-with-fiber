@@ -7,10 +7,14 @@ import (
 )
 
 func Migrate() {
-	err := database.DB.AutoMigrate(&model.User{})
+	err := database.DB.AutoMigrate(
+		&model.User{},
+		&model.Product{},
+	)
 
 	if err != nil {
-		panic("failed to run migration")
+		fmt.Println("failed to run migration:", err)
+		return
 	}
 
 	fmt.Println("database migrated")
