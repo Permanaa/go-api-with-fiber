@@ -58,6 +58,24 @@ func CreateStore(c *fiber.Ctx) error {
 		})
 	}
 
+	var stores []model.Store
+
+	errFindStoreByUserId := database.DB.Where("user_id = ?", userId).Find(&stores).Error
+
+	if errFindStoreByUserId != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errFindStoreByUserId.Error(),
+			"data":    nil,
+		})
+	}
+
+	if len(stores) >= 1 {
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+			"message": "one user one store",
+			"data":    nil,
+		})
+	}
+
 	newStore := model.Store{
 		Name:   createStoreRequest.Name,
 		UserID: uint(userId),
