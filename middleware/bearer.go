@@ -3,12 +3,10 @@ package middleware
 import (
 	"go-api-with-fiber/database"
 	"go-api-with-fiber/database/model"
-	"os"
-	"strings"
+	"go-api-with-fiber/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func BearerProtected(c *fiber.Ctx) error {
@@ -21,12 +19,7 @@ func BearerProtected(c *fiber.Ctx) error {
 		})
 	}
 
-	splitBearer := strings.Split(bearerToken, " ")
-	tokenString := splitBearer[1]
-
-	parseToken, errParseToken := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_ACCESS_TOKEN_SECRET_KEY")), nil
-	})
+	tokenClaims, errParseToken := utils.ParseToken(bearerToken)
 
 	if errParseToken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -34,8 +27,6 @@ func BearerProtected(c *fiber.Ctx) error {
 			"data":    nil,
 		})
 	}
-
-	tokenClaims := parseToken.Claims.(jwt.MapClaims)
 
 	expirationTime, errGetExp := tokenClaims.GetExpirationTime()
 

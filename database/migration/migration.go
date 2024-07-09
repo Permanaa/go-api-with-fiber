@@ -8,13 +8,13 @@ import (
 
 func Migrate() {
 	err := database.DB.AutoMigrate(
-		&model.User{},
 		&model.Product{},
+		&model.Store{},
+		&model.User{},
 	)
 
 	if err != nil {
-		fmt.Println("failed to run migration:", err)
-		return
+		panic("failed to run migration")
 	}
 
 	fmt.Println("database migrated")
