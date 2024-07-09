@@ -27,7 +27,8 @@ func DBConnect() {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		panic("failed to connect database")
+		fmt.Println("failed to connect database:", err)
+		return
 	}
 
 	DB = db
@@ -50,7 +51,8 @@ func RedisConnect() {
 
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
-		panic(err)
+		fmt.Println("failed to connect redis:", err)
+		return
 	}
 
 	RedisClient = client
