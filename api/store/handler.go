@@ -142,3 +142,37 @@ func DeleteStoreBySlug(c *fiber.Ctx) error {
 		"data":    store,
 	})
 }
+
+func GetStoreBySlug(c *fiber.Ctx) error {
+	var store model.Store
+
+	errGetStore := database.DB.Where("slug = ?", c.Params("slug")).First(&store).Error
+
+	if errors.Is(errGetStore, gorm.ErrRecordNotFound) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": errGetStore.Error(),
+			"data":    nil,
+		})
+	}
+
+	if errGetStore != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGetStore.Error(),
+			"data":    nil,
+		})
+	}
+
+	storeResponse := StoreResponse{
+		ID:        store.ID,
+		Name:      store.Name,
+		Slug:      store.Slug,
+		UserID:    store.UserID,
+		CreatedAt: store.CreatedAt,
+		UpdatedAt: store.UpdatedAt,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    storeResponse,
+	})
+}
