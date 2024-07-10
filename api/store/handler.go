@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"go-api-with-fiber/database"
 	"go-api-with-fiber/database/model"
 	"go-api-with-fiber/utils"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gosimple/slug"
+	"gorm.io/gorm"
 )
 
 var validate = validator.New()
@@ -31,7 +34,7 @@ func CreateStore(c *fiber.Ctx) error {
 
 	bearerToken := c.Get("Authorization")
 
-	tokenClaims, errParseToken := utils.ParseToken(bearerToken)
+	tokenClaims, errParseToken := utils.ParseAccessToken(bearerToken)
 
 	if errParseToken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -71,13 +74,14 @@ func CreateStore(c *fiber.Ctx) error {
 
 	if len(stores) >= 1 {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-			"message": "one user one store",
+			"message": "user can only create one store",
 			"data":    nil,
 		})
 	}
 
 	newStore := model.Store{
 		Name:   createStoreRequest.Name,
+		Slug:   slug.Make(createStoreRequest.Name),
 		UserID: uint(userId),
 	}
 
@@ -93,6 +97,7 @@ func CreateStore(c *fiber.Ctx) error {
 	createStoreResponse := StoreResponse{
 		ID:        newStore.ID,
 		Name:      newStore.Name,
+		Slug:      newStore.Slug,
 		UserID:    newStore.UserID,
 		CreatedAt: newStore.CreatedAt,
 		UpdatedAt: newStore.UpdatedAt,
@@ -101,5 +106,39 @@ func CreateStore(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "success",
 		"data":    createStoreResponse,
+	})
+}
+
+func DeleteStoreBySlug(c *fiber.Ctx) error {
+	var store model.Store
+
+	errGetStore := database.DB.Where("slug = ?", c.Params("slug")).First(&store).Error
+
+	if errors.Is(errGetStore, gorm.ErrRecordNotFound) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": errGetStore.Error(),
+			"data":    nil,
+		})
+	}
+
+	if errGetStore != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGetStore.Error(),
+			"data":    nil,
+		})
+	}
+
+	errDeleteStore := database.DB.Delete(&store).Error
+
+	if errDeleteStore != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errDeleteStore,
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    store,
 	})
 }

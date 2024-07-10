@@ -9,6 +9,7 @@ import (
 type Store struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	Name      string         `json:"name" gorm:"unique"`
+	Slug      string         `json:"slug"`
 	UserID    uint           `json:"userId"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`

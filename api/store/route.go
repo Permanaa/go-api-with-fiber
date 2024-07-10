@@ -8,4 +8,5 @@ import (
 
 func Route(app *fiber.App) {
 	app.Post("/store", middleware.BearerProtected, CreateStore)
+	app.Delete("/store/:slug", middleware.BearerProtected, DeleteStoreBySlug)
 }

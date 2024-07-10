@@ -28,7 +28,7 @@ func GenerateRefreshToken(id string) (string, error) {
 	return generate.SignedString([]byte(os.Getenv("JWT_REFRESH_TOKEN_SECRET_KEY")))
 }
 
-func ParseToken(bearerToken string) (jwt.MapClaims, error) {
+func ParseAccessToken(bearerToken string) (jwt.MapClaims, error) {
 	splitBearer := strings.Split(bearerToken, " ")
 	tokenString := splitBearer[1]
 

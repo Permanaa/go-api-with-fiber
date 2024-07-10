@@ -19,7 +19,7 @@ func BearerProtected(c *fiber.Ctx) error {
 		})
 	}
 
-	tokenClaims, errParseToken := utils.ParseToken(bearerToken)
+	tokenClaims, errParseToken := utils.ParseAccessToken(bearerToken)
 
 	if errParseToken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
