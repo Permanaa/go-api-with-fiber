@@ -29,8 +29,7 @@ func DBConnect() {
 	})
 
 	if err != nil {
-		fmt.Println("failed to connect database:", err)
-		return
+		panic(err.Error())
 	}
 
 	DB = db
@@ -42,7 +41,8 @@ func RedisConnect() {
 	redisDBNameNumber, errConvertRedisDBName := strconv.Atoi(os.Getenv("REDIS_DB"))
 
 	if errConvertRedisDBName != nil {
-		panic(errConvertRedisDBName)
+		fmt.Println("failed to connect redis:", errConvertRedisDBName.Error())
+		return
 	}
 
 	client := redis.NewClient(&redis.Options{
@@ -52,8 +52,9 @@ func RedisConnect() {
 	})
 
 	_, err := client.Ping(context.Background()).Result()
+
 	if err != nil {
-		fmt.Println("failed to connect redis:", err)
+		fmt.Println("failed to connect redis:", err.Error())
 		return
 	}
 

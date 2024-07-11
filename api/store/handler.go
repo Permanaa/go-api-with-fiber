@@ -176,3 +176,34 @@ func GetStoreBySlug(c *fiber.Ctx) error {
 		"data":    storeResponse,
 	})
 }
+
+func GetAllStore(c *fiber.Ctx) error {
+	var stores []model.Store
+
+	errGetAllStore := database.DB.Find(&stores).Error
+
+	if errGetAllStore != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGetAllStore.Error(),
+			"data":    nil,
+		})
+	}
+
+	var storesResponse []StoreResponse
+
+	for _, store := range stores {
+		storesResponse = append(storesResponse, StoreResponse{
+			ID:        store.ID,
+			Name:      store.Name,
+			Slug:      store.Slug,
+			UserID:    store.UserID,
+			CreatedAt: store.CreatedAt,
+			UpdatedAt: store.UpdatedAt,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    storesResponse,
+	})
+}
