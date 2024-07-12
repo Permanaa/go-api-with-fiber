@@ -183,6 +183,7 @@ func GetAllStore(c *fiber.Ctx) error {
 	limitQuery := c.Query("limit", "10")
 	orderByQuery := c.Query("orderBy", "created_at")
 	sortQuery := c.Query("sort", "desc")
+	searchQuery := c.Query("search")
 
 	page, errConvertPage := strconv.Atoi(pageQuery)
 
@@ -207,6 +208,7 @@ func GetAllStore(c *fiber.Ctx) error {
 		Limit:   limit,
 		OrderBy: orderByQuery,
 		Sort:    sortQuery,
+		Search:  searchQuery,
 	})
 
 	if errValidateQuery != nil {
@@ -220,7 +222,7 @@ func GetAllStore(c *fiber.Ctx) error {
 
 	var stores []model.Store
 
-	errGetAllStore := database.DB.Limit(limit).Offset((page - 1) * limit).Order(order).Find(&stores).Error
+	errGetAllStore := database.DB.Where("name ILIKE '%%' || ? || '%%'", searchQuery).Order(order).Limit(limit).Offset((page - 1) * limit).Find(&stores).Error
 
 	if errGetAllStore != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

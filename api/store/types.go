@@ -20,4 +20,5 @@ type GetAllStoreQuery struct {
 	Limit   int    `json:"limit" validate:"oneof=5 10 20 50"`
 	OrderBy string `json:"orderBy" validate:"oneof=created_at updated_at name"`
 	Sort    string `json:"sort" validate:"oneof=asc desc"`
+	Search  string `json:"search"`
 }
