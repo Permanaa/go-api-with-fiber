@@ -14,3 +14,10 @@ type StoreResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+
+type GetAllStoreQuery struct {
+	Page    int    `json:"page" validate:"min=1"`
+	Limit   int    `json:"limit" validate:"oneof=5 10 20 50"`
+	OrderBy string `json:"orderBy" validate:"oneof=created_at updated_at name"`
+	Sort    string `json:"sort" validate:"oneof=asc desc"`
+}

@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"fmt"
 	"go-api-with-fiber/database"
 	"go-api-with-fiber/database/model"
 	"go-api-with-fiber/utils"
@@ -178,9 +179,48 @@ func GetStoreBySlug(c *fiber.Ctx) error {
 }
 
 func GetAllStore(c *fiber.Ctx) error {
+	pageQuery := c.Query("page", "1")
+	limitQuery := c.Query("limit", "10")
+	orderByQuery := c.Query("orderBy", "created_at")
+	sortQuery := c.Query("sort", "desc")
+
+	page, errConvertPage := strconv.Atoi(pageQuery)
+
+	if errConvertPage != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errConvertPage.Error(),
+			"data":    nil,
+		})
+	}
+
+	limit, errConvertLimit := strconv.Atoi(limitQuery)
+
+	if errConvertLimit != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errConvertLimit.Error(),
+			"data":    nil,
+		})
+	}
+
+	errValidateQuery := validate.Struct(GetAllStoreQuery{
+		Page:    page,
+		Limit:   limit,
+		OrderBy: orderByQuery,
+		Sort:    sortQuery,
+	})
+
+	if errValidateQuery != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": errValidateQuery.Error(),
+			"data":    nil,
+		})
+	}
+
+	order := fmt.Sprintf("%s %s", orderByQuery, sortQuery)
+
 	var stores []model.Store
 
-	errGetAllStore := database.DB.Find(&stores).Error
+	errGetAllStore := database.DB.Limit(limit).Offset((page - 1) * limit).Order(order).Find(&stores).Error
 
 	if errGetAllStore != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -189,7 +229,7 @@ func GetAllStore(c *fiber.Ctx) error {
 		})
 	}
 
-	var storesResponse []StoreResponse
+	storesResponse := []StoreResponse{}
 
 	for _, store := range stores {
 		storesResponse = append(storesResponse, StoreResponse{
