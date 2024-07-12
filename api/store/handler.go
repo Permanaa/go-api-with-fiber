@@ -222,10 +222,8 @@ func GetAllStore(c *fiber.Ctx) error {
 	order := fmt.Sprintf("%s %s", orderByQuery, sortQuery)
 
 	var stores []model.Store
-	var count int64
 
 	errGetAllStore := database.DB.Where("name ILIKE '%%' || ? || '%%'", searchQuery).Order(order).Limit(limit).Offset((page - 1) * limit).Find(&stores).Error
-	errGetAllStoreCount := database.DB.Model(&model.Store{}).Where("name ILIKE '%%' || ? || '%%'", searchQuery).Count(&count).Error
 
 	if errGetAllStore != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -233,6 +231,10 @@ func GetAllStore(c *fiber.Ctx) error {
 			"data":    nil,
 		})
 	}
+
+	var count int64
+
+	errGetAllStoreCount := database.DB.Model(&model.Store{}).Where("name ILIKE '%%' || ? || '%%'", searchQuery).Count(&count).Error
 
 	if errGetAllStoreCount != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
