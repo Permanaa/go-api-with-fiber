@@ -22,3 +22,10 @@ type GetAllStoreQuery struct {
 	Sort    string `json:"sort" validate:"oneof=asc desc"`
 	Search  string `json:"search"`
 }
+
+type Meta struct {
+	Page         int `json:"page"`
+	Limit        int `json:"limit"`
+	TotalPages   int `json:"totalPages"`
+	TotalRecords int `json:"totalRecords"`
+}

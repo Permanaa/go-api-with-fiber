@@ -6,6 +6,7 @@ import (
 	"go-api-with-fiber/database"
 	"go-api-with-fiber/database/model"
 	"go-api-with-fiber/utils"
+	"math"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
@@ -221,12 +222,21 @@ func GetAllStore(c *fiber.Ctx) error {
 	order := fmt.Sprintf("%s %s", orderByQuery, sortQuery)
 
 	var stores []model.Store
+	var count int64
 
 	errGetAllStore := database.DB.Where("name ILIKE '%%' || ? || '%%'", searchQuery).Order(order).Limit(limit).Offset((page - 1) * limit).Find(&stores).Error
+	errGetAllStoreCount := database.DB.Model(&model.Store{}).Where("name ILIKE '%%' || ? || '%%'", searchQuery).Count(&count).Error
 
 	if errGetAllStore != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": errGetAllStore.Error(),
+			"data":    nil,
+		})
+	}
+
+	if errGetAllStoreCount != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": errGetAllStoreCount.Error(),
 			"data":    nil,
 		})
 	}
@@ -244,8 +254,16 @@ func GetAllStore(c *fiber.Ctx) error {
 		})
 	}
 
+	meta := Meta{
+		Page:         page,
+		Limit:        limit,
+		TotalPages:   int(math.Ceil(float64(count) / float64(limit))),
+		TotalRecords: int(count),
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "success",
 		"data":    storesResponse,
+		"meta":    meta,
 	})
 }
