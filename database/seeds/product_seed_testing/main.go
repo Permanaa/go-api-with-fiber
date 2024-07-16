@@ -17,15 +17,16 @@ func main() {
 
 	database.DBConnect()
 
-	errMigrate := database.DB.AutoMigrate(
-		&model.Product{},
-		&model.Store{},
-		&model.User{},
-	)
+	var product model.Product
 
-	if errMigrate != nil {
-		log.Fatalf("failed to run migration: %s", errMigrate.Error())
+	product.Name = "Product Seeding Testing"
+	product.Price = 10000
+
+	errSave := database.DB.Save(&product).Error
+
+	if errSave != nil {
+		log.Fatalf("failed to seed: %s", errSave.Error())
 	}
 
-	fmt.Println("database migrated")
+	fmt.Println("seeding product testing was successful")
 }

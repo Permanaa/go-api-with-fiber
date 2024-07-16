@@ -3,7 +3,6 @@ package main
 import (
 	"go-api-with-fiber/api"
 	"go-api-with-fiber/database"
-	"go-api-with-fiber/database/migration"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,8 +20,6 @@ func main() {
 
 	database.DBConnect()
 	database.RedisConnect()
-
-	migration.Migrate()
 
 	app.Use(limiter.New())
 
