@@ -8,24 +8,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateAccessToken(id string) (string, error) {
+func GenerateToken(id string, key string, expiredAt time.Time) (string, error) {
 	generate := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "scratching",
 		Subject:   id,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		ExpiresAt: jwt.NewNumericDate(expiredAt),
 	})
 
-	return generate.SignedString([]byte(os.Getenv("JWT_ACCESS_TOKEN_SECRET_KEY")))
-}
-
-func GenerateRefreshToken(id string) (string, error) {
-	generate := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    "scratching",
-		Subject:   id,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
-	})
-
-	return generate.SignedString([]byte(os.Getenv("JWT_REFRESH_TOKEN_SECRET_KEY")))
+	return generate.SignedString([]byte(key))
 }
 
 func ParseAccessToken(bearerToken string) (jwt.MapClaims, error) {

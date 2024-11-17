@@ -120,7 +120,11 @@ func LogIn(c *fiber.Ctx) error {
 		})
 	}
 
-	accessToken, errGenerateAccessToken := utils.GenerateAccessToken(strconv.Itoa(int(user.ID)))
+	accessToken, errGenerateAccessToken := utils.GenerateToken(
+		strconv.Itoa(int(user.ID)),
+		os.Getenv("JWT_ACCESS_TOKEN_SECRET_KEY"),
+		time.Now().Add(time.Hour*24),
+	)
 
 	if errGenerateAccessToken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -129,7 +133,11 @@ func LogIn(c *fiber.Ctx) error {
 		})
 	}
 
-	refreshToken, errGenerateRefreshtoken := utils.GenerateRefreshToken(strconv.Itoa(int(user.ID)))
+	refreshToken, errGenerateRefreshtoken := utils.GenerateToken(
+		strconv.Itoa(int(user.ID)),
+		os.Getenv("JWT_REFRESH_TOKEN_SECRET_KEY"),
+		time.Now().Add(time.Hour*24*7),
+	)
 
 	if errGenerateRefreshtoken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -215,7 +223,11 @@ func RefreshToken(c *fiber.Ctx) error {
 		})
 	}
 
-	accessToken, errGenerateAccessToken := utils.GenerateAccessToken(strconv.Itoa(int(user.ID)))
+	accessToken, errGenerateAccessToken := utils.GenerateToken(
+		strconv.Itoa(int(user.ID)),
+		os.Getenv("JWT_ACCESS_TOKEN_SECRET_KEY"),
+		time.Now().Add(time.Hour*24),
+	)
 
 	if errGenerateAccessToken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -224,7 +236,11 @@ func RefreshToken(c *fiber.Ctx) error {
 		})
 	}
 
-	refreshToken, errGenerateRefreshtoken := utils.GenerateRefreshToken(strconv.Itoa(int(user.ID)))
+	refreshToken, errGenerateRefreshtoken := utils.GenerateToken(
+		strconv.Itoa(int(user.ID)),
+		os.Getenv("JWT_REFRESH_TOKEN_SECRET_KEY"),
+		time.Now().Add(time.Hour*24*7),
+	)
 
 	if errGenerateRefreshtoken != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
